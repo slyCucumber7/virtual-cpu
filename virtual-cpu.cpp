@@ -86,27 +86,124 @@ unsigned int loadOperand(int leftIndex, int rightIndex, uint8_t memory[]){
     return currentWhole.whole;
 }
 
-void execute(opCode instruction){
+void loadWordToR(uint16_t word, uint8_t r[]){
+    memAddress temp;
+    temp.whole = word;
+    r[0] = temp.left;
+    r[1] = temp.right;
+}
+
+void bitwiseInvert(uint8_t r[]){
+uint16_t temp = loadOperand(0,1,r);
+temp = ~temp;
+loadWordToR(temp,r);
+}
+
+void aslR(uint8_t r[]){
+    int temp = loadOperand(0,1,r);
+    temp == temp << 1;
+    uint16_t temp2 = temp;
+    loadWordToR(temp,r);
+}
+
+void asrR(uint8_t r[]){
+    int temp = loadOperand(0,1,r);
+    temp == temp >> 1;
+    uint16_t temp2 = temp;
+    loadWordToR(temp,r);
+}
+
+uint16_t rotL(uint16_t value, unsigned int count){
+    const uint16_t mask = CHAR_BIT * sizeof(value) - 1;
+    count &= mask;
+    return (value << count) | (value >> (-count & mask)) ;
+}
+
+uint16_t rotR(uint16_t value, unsigned int count){
+    const uint16_t mask = CHAR_BIT * sizeof(value) - 1;
+    count &= mask;
+    return (value >> count) | (value << (-count & mask)) ;
+}
+
+void rotLR(uint8_t r[]){
+    uint16_t temp = loadOperand(0,1,r);
+    temp = rotL(temp,1);
+    loadWordToR(temp,r);
+}
+
+void rotRR(uint8_t r[]){
+    uint16_t temp = loadOperand(0,1,r);
+    temp = rotR(temp,1);
+    loadWordToR(temp,r);
+}
+
+//return bool keepExecuting? 
+void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t indexRegister[]){
     if(instruction.whole == 0b00000000){
         //stop execution
     }
     else if(instruction.whole >= 0b00011000 && instruction.whole <= 0b00011001){
         //bitwise invert r
+        if(instruction.uRBit == 0){         
+            bitwiseInvert(accumulator);
+        }
+        else if(instruction.uRBit == 1){    
+            bitwiseInvert(indexRegister);
+        }
+        else{
+            cout << "Failed to determine r-bit on bitwise invert instruction.";
+        }
     }
     else if(instruction.whole >= 0b00011100 && instruction.whole <= 0b00011101){
         //asl r
+        if(instruction.uRBit == 0){         
+            aslR(accumulator);
+        }
+        else if(instruction.uRBit == 1){    
+            aslR(indexRegister);
+        }
+        else{
+            cout << "Failed to determine r-bit on asl r instruction.";
+        }
     }
     else if(instruction.whole >= 0b00011110 && instruction.whole <= 0b00011111){
         //asr r
+        if(instruction.uRBit == 0){         
+            asrR(accumulator);
+        }
+        else if(instruction.uRBit == 1){    
+            asrR(indexRegister);
+        }
+        else{
+            cout << "Failed to determine r-bit on asr r instruction.";
+        }
     }
     else if(instruction.whole >= 0b00100000 && instruction.whole <= 0b00100001){
         //rotate left r
+         if(instruction.uRBit == 0){         
+            rotLR(accumulator);
+        }
+        else if(instruction.uRBit == 1){    
+            rotLR(indexRegister);
+        }
+        else{
+            cout << "Failed to determine r-bit on rotate left r instruction.";
+        }
     }
     else if(instruction.whole >= 0b00100010 && instruction.whole <= 0b00100011){
         //rotate right r 
+         if(instruction.uRBit == 0){         
+            rotRR(accumulator);
+        }
+        else if(instruction.uRBit == 1){    
+            rotRR(indexRegister);
+        }
+        else{
+            cout << "Failed to determine r-bit on rotate right r instruction.";
+        }
     }
     else if(instruction.whole >= 0b00110000 && instruction.whole <= 0b00110111){
-        //decimal input trap
+        //decimal input trap (has a-field,no r)
     }
     else if(instruction.whole >= 0b00111000 && instruction.whole <= 0b00111111){
         //decimal output trap
@@ -118,7 +215,7 @@ void execute(opCode instruction){
         //character output
     }
     else if(instruction.whole >= 0b01110000 && instruction.whole <= 0b01111111){
-        //Add to r
+        //Add to r (has a-field and r)
     }
     else if(instruction.whole >= 0b10000000 && instruction.whole <= 0b10001111){
         //subtract from r
@@ -169,16 +266,16 @@ void execute(opCode instruction){
 
 
 int main(){
-   //registers
-   int memlen = 100;
-    //cell memory[memlen];
+     //----------------------------------------------------------------------------------------------------------------------------
+    //This section contains the memory array and registers.
+    int memlen = 100;
     uint8_t memory[memlen];
-    // cell accumulator[2];
-    // cell indexRegister[2];
+    uint8_t accumulator[2];
+    uint8_t indexRegister[2];
     // twoByteCounter programCounter {programCounter.index=0};
     // twoByteCounter stackPointer {stackPointer.index=65535};
     // bool statusNZVC[4] = {0,0,0,0}; //this is 4 byes; use uint8_t if you don't like that.
-    
+    //End of register section.
     //---------------------------------------------------------------------------------------------------------------------------
     //This section reads a file's contents into a string vector.
     vector<string> list;
