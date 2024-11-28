@@ -8,10 +8,6 @@
 #include<fstream>
 using namespace std;
 
-// struct cell {   //This is used to populate the array; It is a single index's data
-//     uint8_t data;
-// };
-    
 union memAddress{   //Use this to access two adjacent indices as a single memory address in the format of an unsigned 16 bit integer
     uint16_t whole;
     struct{
@@ -90,6 +86,75 @@ unsigned int loadOperand(int leftIndex, int rightIndex, uint8_t memory[]){
     return currentWhole.whole;
 }
 
+void execute(opCode instruction){
+    if(instruction.whole == 0b00000000){
+        //stop execution
+    }
+    else if(instruction.whole >= 0b00011000 && instruction.whole <= 0b00011001){
+        //bitwise invert r
+    }
+    else if(instruction.whole >= 0b00011100 && instruction.whole <= 0b00011101){
+        //asl r
+    }
+    else if(instruction.whole >= 0b00011110 && instruction.whole <= 0b00011111){
+        //asr r
+    }
+    else if(instruction.whole >= 0b00100000 && instruction.whole <= 0b00100001){
+        //rotate left r
+    }
+    else if(instruction.whole >= 0b00100010 && instruction.whole <= 0b00100011){
+        //rotate right r 
+    }
+    else if(instruction.whole >= 0b00110000 && instruction.whole <= 0b00110111){
+        //decimal input trap
+    }
+    else if(instruction.whole >= 0b00111000 && instruction.whole <= 0b00111111){
+        //decimal output trap
+    }
+    else if(instruction.whole >= 0b01001000 && instruction.whole <= 0b01001111){
+        //character input
+    }
+    else if(instruction.whole >= 0b01010000 && instruction.whole <= 0b01010111){
+        //character output
+    }
+    else if(instruction.whole >= 0b01110000 && instruction.whole <= 0b01111111){
+        //Add to r
+    }
+    else if(instruction.whole >= 0b10000000 && instruction.whole <= 0b10001111){
+        //subtract from r
+    }
+    else if(instruction.whole >= 0b10010000 && instruction.whole <= 0b10011111){
+        //bitwise AND to r
+    }
+    else if(instruction.whole >= 0b10100000 && instruction.whole <= 0b10101111){
+        //bitwise OR to r
+    }
+    else if(instruction.whole >= 0b11000000 && instruction.whole <= 0b11001111){
+        //Load word from memory
+    }
+    else if(instruction.whole >= 0b11010000 && instruction.whole <= 0b11011111){
+        //Load byte from memory
+    }
+    else if(instruction.whole >= 0b11100000 && instruction.whole <= 0b11101111){
+        //Store r to memory
+    }
+    else if(instruction.whole >= 0b11110000 && instruction.whole <= 0b11111111){
+        //Store byte (right half) from r to memory
+    }
+    else{
+        //Instruction is invalid
+    }
+   
+
+
+
+
+
+
+
+
+}
+
 // void incrementPC(cell pC[]){    //this is pretty reduntant, but it uses the actual program counter;
 //     int currentIndex = loadOperand(0,1,pC);
 //     currentIndex++;
@@ -145,7 +210,7 @@ int main(){
             loadCounter+=3;
         }
         else{   //invalid instruction
-            cout << "An invalid/empty instruction was recieved and was skipped." << " Instruction: " << list[loadCounter] << " Index: " << loadCounter <<  " First4: " << curInstr.First4 << endl;
+            cout << "An invalid/empty instruction was recieved and was skipped." << " Instruction: " << list[loadCounter] << " Index: " << loadCounter <<  " Value: " << curInstr.First4 << endl;
             break;
         }
     } 
@@ -155,9 +220,17 @@ int main(){
         printf("Data at %d: %d\n",i,memory[i]);
     }
     printf("Loading from memory attempt: %d",loadOperand(1,2,memory));
-    //Where are we currently?
-    //issue with load operand's order being reversed
-
+    //------------------------------------------------------------------------------------------------------------------------------------------------
+    //Progress summary
+    //Remaining core tasks:
+    //implement opCode functionality, 
+    //implement execution loop,
+    //polish main 
+    //------------------------------------------------------------------------------------------------------------------------------------------------
+    //Current task?
+    //implement opcode functionality.
+    //Targets for refactoring: Swap hexToDec function for built-in version, swap opCode struct to a union containing bitfielded uint8_t structs
+    //-------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
