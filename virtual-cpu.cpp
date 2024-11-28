@@ -14,8 +14,10 @@ struct cell {   //This is used to populate the array; It is a single index's dat
     
 union memAddress{   //Use this to access two adjacent indices as a single memory address in the format of an unsigned 16 bit integer
     uint16_t whole;
-    cell left;
-    cell right;
+    struct{
+        cell left;
+        cell right;
+    };
 };
 
 struct opCode{  
@@ -101,7 +103,7 @@ int main(){
     //---------------------------------------------------------------------------------------------------------------------------
     //This section reads a file's contents into a string vector.
     vector<string> list;
-    string filename = "pepInstructions.txt";    //note that laptop runs code from the output folder, so you have to put input files in there, or specify an absolute path.
+    string filename = "pepInstructions.txt";    
     string inputBuff;
     ifstream file(filename);
     
@@ -129,36 +131,27 @@ int main(){
             loadCounter+=3;
         }
         else{   //invalid instruction
-            cout << "An invalid/empty instruction was recieved and was skipped." << " Instruction: " << list[loadCounter] << endl;
+            cout << "An invalid/empty instruction was recieved and was skipped." << " Instruction: " << list[loadCounter] << " Index: " << loadCounter << endl;
             break;
         }
     } 
     //end of program loading section.
     //-------------------------------------------------------------------------------------------------------------------------------------------
-    for(int i = 0; memory[i].data != 0b0000 && i < memlen; i++){
+    for(int i = 0; memory[i].data != 0b0000 && i < memlen; i++){    //print loop on mem array to debug
         printf("Data at %d: %d\n",i,memory[i].data);
     }
-    cout << loadOperand(1,2,memory);
+   printf("Loading from memory attempt: %d",loadOperand(1,2,memory));
 
-    //delete this comment
-
-
-
-
-    // memory[0].data = 0b00110010;
-    // cout << memory[0].data;
-    // printf("\nData: %d", memory[0].data);
-    
-    //cout << memory[0].data;
-    
     //Where are we currently?
-    //file reading and input parsing work fine
-    //input vector to memory array storing seems to work fine
-    //we need to double check that non unary instructions are loaded correctly
-    //after that, all that is needed is execution loop and instruction function(s)
-    //I think zero is being dropped by my binary to decimal converter. Check that out.
+    //instructions seem to store and load properly.
+
+
+
+
+
     
-    
+   
+    //----------------------------------------------------
     //execution loop
     
 
