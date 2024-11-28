@@ -8,24 +8,38 @@
 #include<fstream>
 using namespace std;
 
-struct cell {   //This is used to populate the array; It is a single index's data
-    uint8_t data;
-};
+// struct cell {   //This is used to populate the array; It is a single index's data
+//     uint8_t data;
+// };
     
 union memAddress{   //Use this to access two adjacent indices as a single memory address in the format of an unsigned 16 bit integer
     uint16_t whole;
     struct{
-        cell left;
-        cell right;
+        uint8_t right;    //LSB
+        uint8_t left;     //MSB
     };
 };
 
 struct opCode{  
-    cell whole;                                       //instruction specifier
-    uint8_t First4 = (whole.data & 0b11110000) >> 4;  //instruction
-    uint8_t uRBit  =  whole.data & 0b00000001;        //r-bit if unary
-    uint8_t nURBit = (whole.data & 0b00001000) >> 3;  //r-bit if non-unary
-    uint8_t aField = (whole.data & 0b00000111);       //addressing mode if non-unary
+    uint8_t whole;        //instruction specifier
+    uint8_t First4;      //instruction bits
+    uint8_t uRBit;       //r-bit if unary
+    uint8_t nURBit;      //r-bit if non-unary
+    uint8_t aField;      //addressing mode if non-unary
+    
+    opCode(uint8_t whole): //constructor to initialize the members' values
+    whole(whole),
+    First4((whole & 0b11110000) >> 4),
+    uRBit(whole & 0b00000001),
+    nURBit((whole & 0b00001000) >> 3),
+    aField((whole & 0b00000111)){}
+    
+    opCode():   //no-args constructor
+    whole(),
+    First4(),
+    uRBit(),
+    nURBit(),
+    aField(){}
 };
 
 
@@ -62,14 +76,14 @@ unsigned int instructionToBin(string instruction){
     return hexToDec(instruction);
 }
 
-void storeOperand(string operand, int leftIndex, int rightIndex, cell memory[]){
+void storeOperand(string operand, int leftIndex, int rightIndex, uint8_t memory[]){
     memAddress currentWhole;
     currentWhole.whole = operandToBin(operand);
     memory[leftIndex] = currentWhole.left;
     memory[rightIndex] = currentWhole.right;
 }
 
-unsigned int loadOperand(int leftIndex, int rightIndex, cell memory[]){
+unsigned int loadOperand(int leftIndex, int rightIndex, uint8_t memory[]){
     memAddress currentWhole;
     currentWhole.left = memory[leftIndex];
     currentWhole.right = memory[rightIndex];
@@ -92,8 +106,8 @@ unsigned int loadOperand(int leftIndex, int rightIndex, cell memory[]){
 int main(){
    //registers
    int memlen = 100;
-    cell memory[memlen];
-    
+    //cell memory[memlen];
+    uint8_t memory[memlen];
     // cell accumulator[2];
     // cell indexRegister[2];
     // twoByteCounter programCounter {programCounter.index=0};
@@ -120,7 +134,7 @@ int main(){
     int size = list.size();
     int loadCounter = 0;
     while (loadCounter < size){
-        curInstr.whole.data = instructionToBin(list[loadCounter]);
+        curInstr.whole = instructionToBin(list[loadCounter]);
         memory[loadCounter] = curInstr.whole;
         if(curInstr.First4 < 0b0011){   //unary
             loadCounter++;
@@ -131,19 +145,18 @@ int main(){
             loadCounter+=3;
         }
         else{   //invalid instruction
-            cout << "An invalid/empty instruction was recieved and was skipped." << " Instruction: " << list[loadCounter] << " Index: " << loadCounter << endl;
+            cout << "An invalid/empty instruction was recieved and was skipped." << " Instruction: " << list[loadCounter] << " Index: " << loadCounter <<  " First4: " << curInstr.First4 << endl;
             break;
         }
     } 
     //end of program loading section.
     //-------------------------------------------------------------------------------------------------------------------------------------------
-    for(int i = 0; memory[i].data != 0b0000 && i < memlen; i++){    //print loop on mem array to debug
-        printf("Data at %d: %d\n",i,memory[i].data);
+    for(int i = 0; memory[i] != 0b0000 && i < memlen; i++){    //print loop on mem array to debug
+        printf("Data at %d: %d\n",i,memory[i]);
     }
-   printf("Loading from memory attempt: %d",loadOperand(1,2,memory));
-
+    printf("Loading from memory attempt: %d",loadOperand(1,2,memory));
     //Where are we currently?
-    //instructions seem to store and load properly.
+    //issue with load operand's order being reversed
 
 
 
