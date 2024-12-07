@@ -180,6 +180,29 @@ void charOut(uint8_t memory[], uint16_t address){
     cout << c;
 }
 
+void addR(uint8_t memory[], uint16_t word, uint8_t r[]){
+    uint16_t temp = loadWordFromMem(r,0);
+    temp += word;
+    storeWordToR(temp,r);
+}
+
+void subR(uint8_t memory[], uint16_t word, uint8_t r[]){
+    uint16_t temp = loadWordFromMem(r,0);
+    temp -= word;
+    storeWordToR(temp,r);
+}
+
+void andR(uint8_t memory[], uint16_t word, uint8_t r[]){
+    uint16_t temp = loadWordFromMem(r,0);
+    temp &= word;
+    storeWordToR(temp,r);
+}
+
+void orR(uint8_t memory[], uint16_t word, uint8_t r[]){
+    uint16_t temp = loadWordFromMem(r,0);
+    temp |= word;
+    storeWordToR(temp,r);
+}
 
 //return bool keepExecuting? 
 void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t indexRegister[], uint16_t pC){
@@ -287,16 +310,104 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
         }
     }
     else if(instruction.whole >= 0b01110000 && instruction.whole <= 0b01111111){
-        //Add to r (has a-field and r)
+        //Add word to r (has a-field and r)
+        if(instruction.aField == 0b000){    //immediate
+            uint16_t word = loadWordFromMem(memory,pC+1);
+            if(instruction.nURBit == 0){   //accumulator
+                addR(memory,word,accumulator);
+            }
+            else{                          //index register             
+                addR(memory,word,indexRegister);
+            }
+        }
+        else if(instruction.aField == 0b001){   //direct
+            uint16_t address = loadWordFromMem(memory,pC+1);
+            uint16_t word = loadWordFromMem(memory,address);
+            if(instruction.nURBit == 0){    
+                addR(memory,word,accumulator);
+            }
+            else{                           
+                addR(memory,word,indexRegister);
+            }
+        }
+        else{
+            cout << "Addressing mode: " << instruction.aField << " is not supported for addR instruction.";
+        }
     }
     else if(instruction.whole >= 0b10000000 && instruction.whole <= 0b10001111){
-        //subtract from r
+        //subtract word from r
+         if(instruction.aField == 0b000){    //immediate
+            uint16_t word = loadWordFromMem(memory,pC+1);
+            if(instruction.nURBit == 0){   //accumulator
+                subR(memory,word,accumulator);
+            }
+            else{                          //index register             
+                subR(memory,word,indexRegister);
+            }
+        }
+        else if(instruction.aField == 0b001){   //direct
+            uint16_t address = loadWordFromMem(memory,pC+1);
+            uint16_t word = loadWordFromMem(memory,address);
+            if(instruction.nURBit == 0){    
+                subR(memory,word,accumulator);
+            }
+            else{                           
+                subR(memory,word,indexRegister);
+            }
+        }
+        else{
+            cout << "Addressing mode: " << instruction.aField << " is not supported for subR instruction.";
+        }
     }
     else if(instruction.whole >= 0b10010000 && instruction.whole <= 0b10011111){
-        //bitwise AND to r
+        //bitwise AND word to r
+         if(instruction.aField == 0b000){    //immediate
+            uint16_t word = loadWordFromMem(memory,pC+1);
+            if(instruction.nURBit == 0){   //accumulator
+                andR(memory,word,accumulator);
+            }
+            else{                          //index register             
+                andR(memory,word,indexRegister);
+            }
+        }
+        else if(instruction.aField == 0b001){   //direct
+            uint16_t address = loadWordFromMem(memory,pC+1);
+            uint16_t word = loadWordFromMem(memory,address);
+            if(instruction.nURBit == 0){    
+                andR(memory,word,accumulator);
+            }
+            else{                           
+                andR(memory,word,indexRegister);
+            }
+        }
+        else{
+            cout << "Addressing mode: " << instruction.aField << " is not supported for andR instruction.";
+        }
     }
     else if(instruction.whole >= 0b10100000 && instruction.whole <= 0b10101111){
-        //bitwise OR to r
+        //bitwise OR word to r
+         if(instruction.aField == 0b000){    //immediate
+            uint16_t word = loadWordFromMem(memory,pC+1);
+            if(instruction.nURBit == 0){   //accumulator
+                orR(memory,word,accumulator);
+            }
+            else{                          //index register             
+                orR(memory,word,indexRegister);
+            }
+        }
+        else if(instruction.aField == 0b001){   //direct
+            uint16_t address = loadWordFromMem(memory,pC+1);
+            uint16_t word = loadWordFromMem(memory,address);
+            if(instruction.nURBit == 0){    
+                orR(memory,word,accumulator);
+            }
+            else{                           
+                orR(memory,word,indexRegister);
+            }
+        }
+        else{
+            cout << "Addressing mode: " << instruction.aField << " is not supported for orR instruction.";
+        }
     }
     else if(instruction.whole >= 0b11000000 && instruction.whole <= 0b11001111){
         //Load word from memory
