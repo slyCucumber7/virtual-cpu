@@ -6,6 +6,7 @@
 #include<vector>
 #include<sstream>
 #include<fstream>
+#include<conio.h>
 using namespace std;
 
 union memAddress{   //Use this to access two adjacent indices as a single memory address in the format of an unsigned 16 bit integer
@@ -208,11 +209,10 @@ void lWdR(uint8_t memory[], uint16_t word, uint8_t r[]){
     storeWordToR(word,r);
 }
 
-
-//return bool keepExecuting? 
-void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t indexRegister[], uint16_t pC){
+void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t indexRegister[], uint16_t pC, bool &stopEx){
     if(instruction.whole == 0b00000000){
-        //stop execution
+        cout << "Stop instruction reached; Terminating program.";
+        stopEx = true;
     }
     else if(instruction.whole >= 0b00011000 && instruction.whole <= 0b00011001){
         //bitwise invert r
@@ -318,10 +318,10 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
         //Add word to r (has a-field and r)
         if(instruction.aField == 0b000){    //immediate
             uint16_t word = loadWordFromMem(memory,pC+1);
-            if(instruction.nURBit == 0){   //accumulator
+            if(instruction.nURBit == 0){   
                 addR(memory,word,accumulator);
             }
-            else{                          //index register             
+            else{                                     
                 addR(memory,word,indexRegister);
             }
         }
@@ -343,10 +343,10 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
         //subtract word from r
          if(instruction.aField == 0b000){    //immediate
             uint16_t word = loadWordFromMem(memory,pC+1);
-            if(instruction.nURBit == 0){   //accumulator
+            if(instruction.nURBit == 0){   
                 subR(memory,word,accumulator);
             }
-            else{                          //index register             
+            else{                                      
                 subR(memory,word,indexRegister);
             }
         }
@@ -368,10 +368,10 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
         //bitwise AND word to r
          if(instruction.aField == 0b000){    //immediate
             uint16_t word = loadWordFromMem(memory,pC+1);
-            if(instruction.nURBit == 0){   //accumulator
+            if(instruction.nURBit == 0){   
                 andR(memory,word,accumulator);
             }
-            else{                          //index register             
+            else{                                      
                 andR(memory,word,indexRegister);
             }
         }
@@ -393,10 +393,10 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
         //bitwise OR word to r
          if(instruction.aField == 0b000){    //immediate
             uint16_t word = loadWordFromMem(memory,pC+1);
-            if(instruction.nURBit == 0){   //accumulator
+            if(instruction.nURBit == 0){   
                 orR(memory,word,accumulator);
             }
-            else{                          //index register             
+            else{                                      
                 orR(memory,word,indexRegister);
             }
         }
@@ -510,17 +510,6 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
 
 }
 
-// void incrementPC(cell pC[]){    //this is pretty reduntant, but it uses the actual program counter;
-//     int currentIndex = loadOperand(0,1,pC);
-//     currentIndex++;
-//     memAddress temp;
-//     temp.whole = currentIndex;
-//     pC[0] = temp.left;
-//     pC[1] = temp.right;
-// };
-
-
-
 
 
 int main(){
@@ -531,9 +520,7 @@ int main(){
     uint8_t accumulator[2];
     uint8_t indexRegister[2];
     uint16_t pC = 0;
-    // twoByteCounter programCounter {programCounter.index=0};
-    // twoByteCounter stackPointer {stackPointer.index=65535};
-    // bool statusNZVC[4] = {0,0,0,0}; //this is 4 byes; use uint8_t if you don't like that.
+    uint16_t sP = 65535;
     //End of register section.
     //---------------------------------------------------------------------------------------------------------------------------
     //This section reads a file's contents into a string vector.
@@ -572,33 +559,34 @@ int main(){
     } 
     //end of program loading section.
     //-------------------------------------------------------------------------------------------------------------------------------------------
-    for(int i = 0; memory[i] != 0b0000 && i < memlen; i++){    //print loop on mem array to debug
-        printf("Data at %d: %d\n",i,memory[i]);
-    }
-    printf("Loading from memory attempt: %d",loadOperand(1,2,memory));
-    int16_t x = 32;
-    //------------------------------------------------------------------------------------------------------------------------------------------------
-    //Progress summary
-    //Remaining core tasks:
-    //implement opCode functionality, 
-    //implement execution loop,
-    //polish main 
+    // for(int i = 0; memory[i] != 0b0000 && i < memlen; i++){    //print loop on mem array to debug
+    //     printf("Data at %d: %d\n",i,memory[i]);
+    // }
+    // printf("Loading from memory attempt: %d",loadOperand(1,2,memory));
+    // int16_t x = 32;
     //------------------------------------------------------------------------------------------------------------------------------------------------
     //Current task?
-    //implement opcode functionality.
+    //print registers on step
+    //test opcode functionality, test execution loop functionality
     //Targets for refactoring: Swap hexToDec function for built-in version, swap opCode struct to a union containing bitfielded uint8_t structs, 
-    //note that rotate instructions do NOT currently make use of a status register
     //finish initial version without using status bits, then come back and add status bit usage during polishing stage.
     //-------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
-
-    
-   
-    //----------------------------------------------------
     //Execution loop
-    
+    bool stopEx = false;
+    //fetch, decode, increment, execute.
+    while(!stopEx && pC < 10){  //remember to change this to 65535 later.
+        cout << "Press any key to step execution.\n";
+        getch();
+        opCode current = memory[pC];
+        if(current.First4 < 0b0011){
+            pC++;
+        }
+        else{
+            pC+=3;
+        }
+        execute(current,memory,accumulator,indexRegister,pC,stopEx);
+        //print out the registers
+    }
 
 
     //End of exectution loop section
