@@ -79,6 +79,23 @@ void storeOperand(string operand, int leftIndex, int rightIndex, uint8_t memory[
     memory[rightIndex] = currentWhole.right;
 }
 
+void storeWordToMem(uint16_t word, int leftIndex,uint8_t memory[]){
+    memAddress currentWhole;
+    currentWhole.whole = word;
+    memory[leftIndex] = currentWhole.left;
+    memory[leftIndex+1] = currentWhole.right;
+}
+
+uint16_t loadWordFromMem(uint8_t memory[], uint16_t leftIndex){
+    uint16_t output;
+    memAddress temp;
+    temp.left = memory[leftIndex];
+    temp.right = memory[leftIndex + 1];
+    output = temp.whole;
+    return output;
+}
+
+
 unsigned int loadOperand(int leftIndex, int rightIndex, uint8_t memory[]){
     memAddress currentWhole;
     currentWhole.left = memory[leftIndex];
@@ -86,7 +103,7 @@ unsigned int loadOperand(int leftIndex, int rightIndex, uint8_t memory[]){
     return currentWhole.whole;
 }
 
-void loadWordToR(uint16_t word, uint8_t r[]){
+void storeWordToR(uint16_t word, uint8_t r[]){
     memAddress temp;
     temp.whole = word;
     r[0] = temp.left;
@@ -96,21 +113,21 @@ void loadWordToR(uint16_t word, uint8_t r[]){
 void bitwiseInvert(uint8_t r[]){
 uint16_t temp = loadOperand(0,1,r);
 temp = ~temp;
-loadWordToR(temp,r);
+storeWordToR(temp,r);
 }
 
 void aslR(uint8_t r[]){
     int temp = loadOperand(0,1,r);
     temp == temp << 1;
     uint16_t temp2 = temp;
-    loadWordToR(temp,r);
+    storeWordToR(temp,r);
 }
 
 void asrR(uint8_t r[]){
     int temp = loadOperand(0,1,r);
     temp == temp >> 1;
     uint16_t temp2 = temp;
-    loadWordToR(temp,r);
+    storeWordToR(temp,r);
 }
 
 uint16_t rotL(uint16_t value, unsigned int count){
@@ -128,17 +145,44 @@ uint16_t rotR(uint16_t value, unsigned int count){
 void rotLR(uint8_t r[]){
     uint16_t temp = loadOperand(0,1,r);
     temp = rotL(temp,1);
-    loadWordToR(temp,r);
+    storeWordToR(temp,r);
 }
 
 void rotRR(uint8_t r[]){
     uint16_t temp = loadOperand(0,1,r);
     temp = rotR(temp,1);
-    loadWordToR(temp,r);
+    storeWordToR(temp,r);
 }
 
+void decI(uint8_t memory[], uint16_t pC){
+    int16_t userIn;
+    cout << "Please enter a decimal input:\nNote that x < -32,768 or > 32,767 will result in an overflow.\n";
+    cin >> userIn;                                      //grab deci. Limit for acceptable range is: -32,768 to 32,767
+    storeWordToMem(userIn, pC+1,memory);     //store deci 
+}
+
+void decO(uint8_t memory[], uint16_t leftIndex){
+    int16_t output;
+    output = loadWordFromMem(memory,leftIndex);
+    cout << output;
+}
+
+void charIn(uint8_t memory[], uint16_t address){
+    char c;
+    cout << "Please enter a character input: \n";
+    cin >> c;
+    uint8_t temp = c;
+    memory[address] = c;
+}
+
+void charOut(uint8_t memory[], uint16_t address){
+    char c = memory[address];
+    cout << c;
+}
+
+
 //return bool keepExecuting? 
-void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t indexRegister[]){
+void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t indexRegister[], uint16_t pC){
     if(instruction.whole == 0b00000000){
         //stop execution
     }
@@ -204,15 +248,43 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
     }
     else if(instruction.whole >= 0b00110000 && instruction.whole <= 0b00110111){
         //decimal input trap (has a-field,no r)
+       decI(memory,pC);
     }
     else if(instruction.whole >= 0b00111000 && instruction.whole <= 0b00111111){
         //decimal output trap
+        if(instruction.aField == 0b000){    //immediate
+            decO(memory,pC+1);  //using the address after pC as operand
+        }
+        else if(instruction.aField == 0b001){   //direct
+            uint16_t address = loadWordFromMem(memory,pC+1);
+            decO(memory,address);   //interpreting pC +1 and pC + 2 together as an address; using that address as operand
+        }
+        else{
+            cout << "Addressing mode: " << instruction.aField << " is not supported by deco instruction.";
+        }
     }
     else if(instruction.whole >= 0b01001000 && instruction.whole <= 0b01001111){
         //character input
+        if(instruction.aField == 0b001){
+            uint16_t address = loadWordFromMem(memory,pC+1);
+            charIn(memory,address);
+        }
+        else{
+            cout << "Addressing mode: " << instruction.aField << " is not supported for charIn instruction.";
+        }
     }
     else if(instruction.whole >= 0b01010000 && instruction.whole <= 0b01010111){
         //character output
+        if(instruction.aField == 0b000){    //immediate
+            charOut(memory,pC+2);
+        }
+        else if(instruction.aField == 0b001){   //direct
+            uint16_t address = loadWordFromMem(memory,pC+1);
+            charOut(memory,address);
+        }
+        else{
+            cout << "Addressing mode: " << instruction.aField << " is not supported for charOut instruction.";
+        }
     }
     else if(instruction.whole >= 0b01110000 && instruction.whole <= 0b01111111){
         //Add to r (has a-field and r)
@@ -272,6 +344,7 @@ int main(){
     uint8_t memory[memlen];
     uint8_t accumulator[2];
     uint8_t indexRegister[2];
+    uint16_t pC = 0;
     // twoByteCounter programCounter {programCounter.index=0};
     // twoByteCounter stackPointer {stackPointer.index=65535};
     // bool statusNZVC[4] = {0,0,0,0}; //this is 4 byes; use uint8_t if you don't like that.
@@ -317,6 +390,7 @@ int main(){
         printf("Data at %d: %d\n",i,memory[i]);
     }
     printf("Loading from memory attempt: %d",loadOperand(1,2,memory));
+    int16_t x = 32;
     //------------------------------------------------------------------------------------------------------------------------------------------------
     //Progress summary
     //Remaining core tasks:
@@ -326,7 +400,9 @@ int main(){
     //------------------------------------------------------------------------------------------------------------------------------------------------
     //Current task?
     //implement opcode functionality.
-    //Targets for refactoring: Swap hexToDec function for built-in version, swap opCode struct to a union containing bitfielded uint8_t structs
+    //Targets for refactoring: Swap hexToDec function for built-in version, swap opCode struct to a union containing bitfielded uint8_t structs, 
+    //note that rotate instructions do NOT currently make use of a status register
+    //finish initial version without using status bits, then come back and add status bit usage during polishing stage.
     //-------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -335,34 +411,14 @@ int main(){
     
    
     //----------------------------------------------------
-    //execution loop
+    //Execution loop
     
 
 
-    //testing
-   
-   //store & load both passed test cases. opCode struct passed all test cases.
+    //End of exectution loop section
    
    
    
    
-    // printf("\nSP is at index: %d",stackPointer);
-    // programCounter.index++;
-    // printf("\nProgram counter is at index: %d",programCounter);
-    // printf("\nSize of struct: %d bytes\n", sizeof(opCode));
-    // storeOperand("32",0,1,memory);
-    // opCode current{current.whole.data = loadOperand(0,1,memory)};
-    // printf("\nStruct solution\nExpected value: %d\nActual value: %d\nMemory used (bytes): %d\n", current.whole.data & 0b00000111, current.aField,sizeof(current));
-
-    // //ASR Example (Not Tested)
-//     memAddress temp;
-//     temp.whole=(loadOperand(0,1,accumulator));
-//     int x = temp.whole;
-//     x = x >> 1;
-//     unsigned int y = x;
-//     temp.whole = x;
-//     accumulator[0] = temp.left;
-//     accumulator[1] = temp.right;
-
 
 }
