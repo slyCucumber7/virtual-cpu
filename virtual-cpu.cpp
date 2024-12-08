@@ -13,25 +13,25 @@ union memAddress{   //Use this to access two adjacent indices as a single memory
     uint16_t whole;
     struct{
         uint8_t right;    //LSB
-        uint8_t left;     //MSB
+        uint8_t left;    //MSB
     };
 };
 
 struct opCode{  
-    uint8_t whole;        //instruction specifier
-    uint8_t First4;      //instruction bits
-    uint8_t uRBit;       //r-bit if unary
+    uint8_t whole;          //instruction specifier
+    uint8_t First4;        //instruction bits
+    uint8_t uRBit;        //r-bit if unary
     uint8_t nURBit;      //r-bit if non-unary
-    uint8_t aField;      //addressing mode if non-unary
+    uint8_t aField;     //addressing mode if non-unary
     
-    opCode(uint8_t whole): //constructor to initialize the members' values
+    opCode(uint8_t whole):
     whole(whole),
     First4((whole & 0b11110000) >> 4),
     uRBit(whole & 0b00000001),
     nURBit((whole & 0b00001000) >> 3),
     aField((whole & 0b00000111)){}
     
-    opCode():   //no-args constructor
+    opCode():   
     whole(),
     First4(),
     uRBit(),
@@ -47,9 +47,9 @@ struct twoByteCounter{
 unsigned int hexToDec(string hexIn){
     int totalSum = 0;               //tracks the running sum
     int currentPlace = 0;          //tracks the current place value
-    int basePlace = 0;             //holds the base raised to the current place value
-    int len = hexIn.length();     //loop length
-    int currentInt = 0;                //holds the current character's value as an integer
+    int basePlace = 0;            //holds the base raised to the current place value
+    int len = hexIn.length();    //loop length
+    int currentInt = 0;         //holds the current character's value as an integer
     for(int i = len-1; i >= 0; i--){
         char currentChar = hexIn[i];
         if(currentChar < '0' || currentChar > '9'){
@@ -158,14 +158,14 @@ void rotRR(uint8_t r[]){
 void decI(uint8_t memory[], uint16_t pC){
     int16_t userIn;
     cout << "Please enter a decimal input:\nNote that x < -32,768 or > 32,767 will result in an overflow.\n";
-    cin >> userIn;                                      //grab deci. Limit for acceptable range is: -32,768 to 32,767
-    storeWordToMem(userIn, pC+1,memory);     //store deci 
+    cin >> userIn;
+    storeWordToMem(userIn, pC+1,memory);     
 }
 
 void decO(uint8_t memory[], uint16_t leftIndex){
     int16_t output;
     output = loadWordFromMem(memory,leftIndex);
-    cout << output;
+    cout << "\nOutput: " << output;
 }
 
 void charIn(uint8_t memory[], uint16_t address){
@@ -178,7 +178,7 @@ void charIn(uint8_t memory[], uint16_t address){
 
 void charOut(uint8_t memory[], uint16_t address){
     char c = memory[address];
-    cout << c;
+    cout << "\nOutput: " << c;
 }
 
 void addR(uint8_t memory[], uint16_t word, uint8_t r[]){
@@ -281,11 +281,11 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
     else if(instruction.whole >= 0b00111000 && instruction.whole <= 0b00111111){
         //decimal output trap
         if(instruction.aField == 0b000){    //immediate
-            decO(memory,pC+1);  //using the address after pC as operand
+            decO(memory,pC+1);             //using the address after pC as operand
         }
         else if(instruction.aField == 0b001){   //direct
             uint16_t address = loadWordFromMem(memory,pC+1);
-            decO(memory,address);   //interpreting pC +1 and pC + 2 together as an address; using that address as operand
+            decO(memory,address);              //interpreting pC +1 and pC + 2 together as an address; using that address as operand
         }
         else{
             cout << "Addressing mode: " << instruction.aField << " is not supported by deco instruction.";
@@ -303,11 +303,11 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
     }
     else if(instruction.whole >= 0b01010000 && instruction.whole <= 0b01010111){
         //character output
-        if(instruction.aField == 0b000){    //immediate
+        if(instruction.aField == 0b000){    
             charOut(memory,pC+2);
         }
-        else if(instruction.aField == 0b001){   //direct
-            uint16_t address = loadWordFromMem(memory,pC+1);  //was +1
+        else if(instruction.aField == 0b001){   
+            uint16_t address = loadWordFromMem(memory,pC+1);  
             charOut(memory,address);
         }
         else{
@@ -316,7 +316,7 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
     }
     else if(instruction.whole >= 0b01110000 && instruction.whole <= 0b01111111){
         //Add word to r (has a-field and r)
-        if(instruction.aField == 0b000){    //immediate
+        if(instruction.aField == 0b000){    
             uint16_t word = loadWordFromMem(memory,pC+1);
             if(instruction.nURBit == 0){   
                 addR(memory,word,accumulator);
@@ -325,7 +325,7 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
                 addR(memory,word,indexRegister);
             }
         }
-        else if(instruction.aField == 0b001){   //direct
+        else if(instruction.aField == 0b001){   
             uint16_t address = loadWordFromMem(memory,pC+1);
             uint16_t word = loadWordFromMem(memory,address);
             if(instruction.nURBit == 0){    
@@ -341,7 +341,7 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
     }
     else if(instruction.whole >= 0b10000000 && instruction.whole <= 0b10001111){
         //subtract word from r
-         if(instruction.aField == 0b000){    //immediate
+         if(instruction.aField == 0b000){    
             uint16_t word = loadWordFromMem(memory,pC+1);
             if(instruction.nURBit == 0){   
                 subR(memory,word,accumulator);
@@ -350,7 +350,7 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
                 subR(memory,word,indexRegister);
             }
         }
-        else if(instruction.aField == 0b001){   //direct
+        else if(instruction.aField == 0b001){   
             uint16_t address = loadWordFromMem(memory,pC+1);
             uint16_t word = loadWordFromMem(memory,address);
             if(instruction.nURBit == 0){    
@@ -366,7 +366,7 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
     }
     else if(instruction.whole >= 0b10010000 && instruction.whole <= 0b10011111){
         //bitwise AND word to r
-         if(instruction.aField == 0b000){    //immediate
+         if(instruction.aField == 0b000){    
             uint16_t word = loadWordFromMem(memory,pC+1);
             if(instruction.nURBit == 0){   
                 andR(memory,word,accumulator);
@@ -375,7 +375,7 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
                 andR(memory,word,indexRegister);
             }
         }
-        else if(instruction.aField == 0b001){   //direct
+        else if(instruction.aField == 0b001){   
             uint16_t address = loadWordFromMem(memory,pC+1);
             uint16_t word = loadWordFromMem(memory,address);
             if(instruction.nURBit == 0){    
@@ -391,7 +391,7 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
     }
     else if(instruction.whole >= 0b10100000 && instruction.whole <= 0b10101111){
         //bitwise OR word to r
-         if(instruction.aField == 0b000){    //immediate
+         if(instruction.aField == 0b000){    
             uint16_t word = loadWordFromMem(memory,pC+1);
             if(instruction.nURBit == 0){   
                 orR(memory,word,accumulator);
@@ -400,7 +400,7 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
                 orR(memory,word,indexRegister);
             }
         }
-        else if(instruction.aField == 0b001){   //direct
+        else if(instruction.aField == 0b001){   
             uint16_t address = loadWordFromMem(memory,pC+1);
             uint16_t word = loadWordFromMem(memory,address);
             if(instruction.nURBit == 0){    
@@ -416,7 +416,7 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
     }
     else if(instruction.whole >= 0b11000000 && instruction.whole <= 0b11001111){
         //Load word from memory to r
-         if(instruction.aField == 0b000){    //immediate
+         if(instruction.aField == 0b000){    
             uint16_t word = loadWordFromMem(memory,pC+1);
             if(instruction.nURBit == 0){   
                 lWdR(memory,word,accumulator);
@@ -425,7 +425,7 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
                 lWdR(memory,word,indexRegister);
             }
         }
-        else if(instruction.aField == 0b001){   //direct
+        else if(instruction.aField == 0b001){   
             uint16_t address = loadWordFromMem(memory,pC+1);
             uint16_t word = loadWordFromMem(memory,address);
             if(instruction.nURBit == 0){    
@@ -441,7 +441,7 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
     }
     else if(instruction.whole >= 0b11010000 && instruction.whole <= 0b11011111){
         //Load byte from memory to r
-        if(instruction.aField == 0b000){    //immediate
+        if(instruction.aField == 0b000){    
             if(instruction.nURBit == 0){   
                 accumulator[1] = memory[pC+2];
             }
@@ -449,7 +449,7 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
                 indexRegister[1] = memory[pC+2];
             }
         }
-        else if(instruction.aField == 0b001){   //direct
+        else if(instruction.aField == 0b001){   
             uint16_t address = loadWordFromMem(memory,pC+1);
             uint8_t byte = memory[address];
             if(instruction.nURBit == 0){    
@@ -497,10 +497,9 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
     }
     else{
         //Instruction is invalid
-        cout << "Invalid instruction recieved: " << instruction.whole << endl;
+        printf("An invalid instruction was recieved: %p\n",instruction.whole);
     }
 }
-
 
 int main(){
      //----------------------------------------------------------------------------------------------------------------------------
@@ -510,7 +509,7 @@ int main(){
     uint8_t accumulator[2] {0};
     uint8_t indexRegister[2] {0};
     uint16_t pC = 0;
-    uint16_t sP = 65535;
+    uint16_t sP = memlen-1;
     //End of register section.
     //---------------------------------------------------------------------------------------------------------------------------
     //This section reads a file's contents into a string vector.
@@ -518,7 +517,6 @@ int main(){
     string filename = "pepInstructions.txt";    
     string inputBuff;
     ifstream file(filename);
-    
     //read file contents to inputBuffer using the extraction operator; add to string vector
     while (file >> inputBuff){
         list.push_back(inputBuff);
@@ -550,17 +548,19 @@ int main(){
     //end of program loading section.
     //-------------------------------------------------------------------------------------------------------------------------------------------
     //Current task?
-    //print registers on step
-    //test opcode functionality, test execution loop functionality
-    //Targets for refactoring: Swap hexToDec function for built-in version, swap opCode struct to a union containing bitfielded uint8_t structs, 
+    //refactoring and polishing
+    //Potential targets for refactoring: Swap hexToDec function for built-in version, swap opCode struct to a union containing bitfielded uint8_t structs, 
     //finish initial version without using status bits, then come back and add status bit usage during polishing stage.
     //-------------------------------------------------------------------------------------------------------------------------------------------------
     //Execution loop
     bool stopEx = false;
     //fetch, decode, increment, execute.
-    while(!stopEx && pC < 20){  //remember to change this to 65535 later.
-        cout << "Press any key to step execution.\n";
-        getch();
+    while(!stopEx & pC < memlen){  //remember to change this to 65535 later.
+        cout << "\nPress '0' to Abort execution; Press any other key to continue.\n";
+        if(getch() == '0'){
+            cout << "\nAborting execution.\n";
+            break;
+        }
         opCode current = memory[pC];
         if(current.First4 < 0b0011){
             pC++;
@@ -571,14 +571,6 @@ int main(){
             execute(current,memory,accumulator,indexRegister,pC-3,stopEx);
         }
         printf("\nAccumulator: %d\nIndex register: %d\nProgram Counter: %d\nStack Pointer: %d\n",loadWordFromMem(accumulator,0),loadWordFromMem(indexRegister,0),pC,sP);
-        //print out the registers
     }
-
     //End of exectution loop section
-   
-   //our issue is occuring due to the fact that the pC is incrememted before the instructions are executed, but the execute function uses the pC to determine operand locations.
-   
-   
-   
-
 }
