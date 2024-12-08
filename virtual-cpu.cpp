@@ -211,7 +211,7 @@ void lWdR(uint8_t memory[], uint16_t word, uint8_t r[]){
 
 void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t indexRegister[], uint16_t pC, bool &stopEx){
     if(instruction.whole == 0b00000000){
-        cout << "Stop instruction reached; Terminating program.";
+        cout << "\nStop instruction reached; Terminating program.";
         stopEx = true;
     }
     else if(instruction.whole >= 0b00011000 && instruction.whole <= 0b00011001){
@@ -516,9 +516,9 @@ int main(){
      //----------------------------------------------------------------------------------------------------------------------------
     //This section contains the memory array and registers.
     int memlen = 100;
-    uint8_t memory[memlen];
-    uint8_t accumulator[2];
-    uint8_t indexRegister[2];
+    uint8_t memory[memlen] {0};
+    uint8_t accumulator[2] {0};
+    uint8_t indexRegister[2] {0};
     uint16_t pC = 0;
     uint16_t sP = 65535;
     //End of register section.
@@ -585,6 +585,7 @@ int main(){
             pC+=3;
         }
         execute(current,memory,accumulator,indexRegister,pC,stopEx);
+        printf("\nAccumulator: %d\nIndex register: %d\nProgram Counter: %d\nStack Pointer: %d\n",loadWordFromMem(accumulator,0),loadWordFromMem(indexRegister,0),pC,sP);
         //print out the registers
     }
 
