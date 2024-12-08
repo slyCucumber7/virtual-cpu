@@ -307,7 +307,7 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
             charOut(memory,pC+2);
         }
         else if(instruction.aField == 0b001){   //direct
-            uint16_t address = loadWordFromMem(memory,pC+1);
+            uint16_t address = loadWordFromMem(memory,pC+1);  //was +1
             charOut(memory,address);
         }
         else{
@@ -499,24 +499,14 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
         //Instruction is invalid
         cout << "Invalid instruction recieved: " << instruction.whole << endl;
     }
-   
-
-
-
-
-
-
-
-
 }
-
 
 
 int main(){
      //----------------------------------------------------------------------------------------------------------------------------
     //This section contains the memory array and registers.
     int memlen = 100;
-    uint8_t memory[memlen] {0};
+    uint8_t memory[memlen];
     uint8_t accumulator[2] {0};
     uint8_t indexRegister[2] {0};
     uint16_t pC = 0;
@@ -559,12 +549,6 @@ int main(){
     } 
     //end of program loading section.
     //-------------------------------------------------------------------------------------------------------------------------------------------
-    // for(int i = 0; memory[i] != 0b0000 && i < memlen; i++){    //print loop on mem array to debug
-    //     printf("Data at %d: %d\n",i,memory[i]);
-    // }
-    // printf("Loading from memory attempt: %d",loadOperand(1,2,memory));
-    // int16_t x = 32;
-    //------------------------------------------------------------------------------------------------------------------------------------------------
     //Current task?
     //print registers on step
     //test opcode functionality, test execution loop functionality
@@ -574,24 +558,25 @@ int main(){
     //Execution loop
     bool stopEx = false;
     //fetch, decode, increment, execute.
-    while(!stopEx && pC < 10){  //remember to change this to 65535 later.
+    while(!stopEx && pC < 20){  //remember to change this to 65535 later.
         cout << "Press any key to step execution.\n";
         getch();
         opCode current = memory[pC];
         if(current.First4 < 0b0011){
             pC++;
+            execute(current,memory,accumulator,indexRegister,pC-1,stopEx);
         }
         else{
             pC+=3;
+            execute(current,memory,accumulator,indexRegister,pC-3,stopEx);
         }
-        execute(current,memory,accumulator,indexRegister,pC,stopEx);
         printf("\nAccumulator: %d\nIndex register: %d\nProgram Counter: %d\nStack Pointer: %d\n",loadWordFromMem(accumulator,0),loadWordFromMem(indexRegister,0),pC,sP);
         //print out the registers
     }
 
-
     //End of exectution loop section
    
+   //our issue is occuring due to the fact that the pC is incrememted before the instructions are executed, but the execute function uses the pC to determine operand locations.
    
    
    
