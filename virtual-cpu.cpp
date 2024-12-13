@@ -121,14 +121,14 @@ void aslR(uint8_t r[]){
     int temp = loadOperand(0,1,r);
     temp == temp << 1;
     uint16_t temp2 = temp;
-    storeWordToR(temp,r);
+    storeWordToR(temp2,r);
 }
 
 void asrR(uint8_t r[]){
     int temp = loadOperand(0,1,r);
     temp == temp >> 1;
     uint16_t temp2 = temp;
-    storeWordToR(temp,r);
+    storeWordToR(temp2,r);
 }
 
 uint16_t rotL(uint16_t value, unsigned int count){
