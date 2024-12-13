@@ -504,7 +504,7 @@ void execute(opCode instruction, uint8_t memory[],uint8_t accumulator[],uint8_t 
 int main(){
      //----------------------------------------------------------------------------------------------------------------------------
     //This section contains the memory array and registers.
-    int memlen = 100;
+    int memlen = 65536;
     uint8_t memory[memlen];
     uint8_t accumulator[2] {0};
     uint8_t indexRegister[2] {0};
@@ -514,7 +514,9 @@ int main(){
     //---------------------------------------------------------------------------------------------------------------------------
     //This section reads a file's contents into a string vector.
     vector<string> list;
-    string filename = "pepInstructions.txt";    
+    string filename;    //the input file
+    cout << "Please enter the name of the file containing your object code: ";
+    cin >> filename;
     string inputBuff;
     ifstream file(filename);
     //read file contents to inputBuffer using the extraction operator; add to string vector
